@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Paragraph Splitter</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 100%;
+            margin: 0 auto; 
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #f0f0f0; /* Light grey background */
+        }
+        
+        @media (min-width: 768px) {
+            body {
+                max-width: 800px;
+            }
+        }
+        
+        .input-container { 
+            position: relative; 
+            margin-bottom: 20px; 
+            width: 100%;
+        }
+        
+        textarea { 
+            width: 100%; 
+            height: 200px; 
+            margin-bottom: 5px; 
+            padding: 10px;
+            padding-top: 60px; /* Space for the paste button */
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        
+        .paste-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            cursor: pointer;
+            background: #34a853;
+            color: white;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            padding: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            height: 50px;
+            text-align: center;
+        }
+        
+        .paragraph-box { 
+            border: 3px solid #666; 
+            border-radius: 12px;
+            padding: 15px; 
+            margin-bottom: 20px; 
+            position: relative;
+            padding-bottom: 60px; /* Space for the button */
+            width: 100%;
+            box-sizing: border-box;
+            background-color: white; /* White background for paragraph boxes */
+        }
+        
+        .paragraph-content {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0 0 10px 0;
+            word-wrap: break-word;
+            min-height: 50px;
+            border: 1px solid #ddd;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .paragraph-content:focus {
+            outline: 2px solid #4285f4;
+            border-color: transparent;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 0;
+            font-size: 16px;
+            font-weight: bold;
+            height: 50px;
+        }
+        
+        @media (max-width: 480px) {
+            .copy-btn {
+                height: 60px; /* Larger touch target on small screens */
+                font-size: 18px;
+            }
+            
+            textarea {
+                height: 150px;
+            }
+        }
+        
+        .copy-btn-orange {
+            background: #FF8C00; /* Dark Orange */
+        }
+        
+        .copy-btn-yellow {
+            background: #FFD700; /* Gold */
+            color: #333; /* Darker text for better contrast on yellow */
+        }
+        
+        .save-container {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .save-inputs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .save-inputs input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex: 1;
+        }
+        
+        .save-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .visit-type-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .visit-type-btn {
+            background: #FF8C00; /* Orange by default */
+            color: white;
+            border: none;
+            border-radius: 20px; /* Oval shape */
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .visit-type-btn.selected {
+            background: #FFD700; /* Yellow when selected */
+            color: #333;
+            box-shadow: 0 0 0 2px #FF8C00; /* Orange outline */
+        }
+        
+        .paragraph-label {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #6a0dad; /* Purple color for labels */
+            background-color: #f8f8f8;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .number-box-container {
+            margin-top: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+
+        .number-box {
+            border: 3px solid #4285f4; /* Thicker border */
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100px;
+            text-align: center;
+            background-color: #f8f8f8;
+        }
+
+        .number-arrows {
+            display: flex;
+            flex-direction: row; /* Changed from column to row */
+            gap: 5px;
+        }
+
+        .arrow-btn {
+            background: #4285f4;
+            color: white;
+            border: 3px solid #3367d6; /* Thicker border */
+            border-radius: 8px;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Make buttons larger on mobile */
+        @media (max-width: 480px) {
+            .arrow-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+            }
+            
+            .number-box {
+                width: 120px;
+                font-size: 20px;
+                padding: 12px;
+            }
+        }
+
+        .arrow-btn:hover {
+            background: #3367d6;
+        }
+
+        .arrow-btn:active {
+            background: #2a56c6; /* Darker when pressed */
+            transform: scale(0.95); /* Slight press effect */
+        }
+
+        .number-label {
+            font-weight: bold;
+            color: #4285f4;
+            margin-bottom: 5px;
+            width: 100%; /* Make label take full width */
+        }
+
+        /* Add these styles for the pressed state of arrow buttons */
+        .arrow-btn.pressed {
+            background-color: #34a853; /* Google green */
+            border-color: #2e8b57; /* Darker green */
+        }
+
+        /* Add a subtle indicator for edited number boxes */
+        .number-box.edited {
+            border-color: #34a853; /* Green border */
+            background-color: #f0fff0; /* Very light green background */
+        }
+    </style>
+</head>
+<body>
+    <div class="input-container">
+        <textarea id="inputText" placeholder="Paste your text here..." oninput="splitText()"></textarea>
+        <button class="paste-btn" onclick="pasteFromClipboard()">PASTE</button>
+    </div>
+    
+    <div id="paragraphContainer"></div>
+    
+    <div class="save-container">
+        <div class="save-inputs">
+            <input type="text" id="patientName" placeholder="Patient Name">
+            <input type="date" id="visitDate">
+        </div>
+        <div class="visit-type-container">
+            <button class="visit-type-btn" data-type="PT00">PT00</button>
+            <button class="visit-type-btn" data-type="PT01">PT01</button>
+            <button class="visit-type-btn" data-type="PT19">PT19</button>
+            <button class="visit-type-btn" data-type="PT18">PT18</button>
+            <button class="visit-type-btn" data-type="PT33">PT33</button>
+            <button class="visit-type-btn" data-type="PT17">PT17</button>
+            <button class="visit-type-btn" data-type="PT06">PT06</button>
+        </div>
+        <button class="save-btn" onclick="saveTextFile()">SAVE TEXT FILE</button>
+    </div>
+
+    <script>
+        // Set today's date as default
+        document.getElementById('visitDate').valueAsDate = new Date();
+        
+        // Set up visit type buttons
+        const visitTypeButtons = document.querySelectorAll('.visit-type-btn');
+        let selectedVisitType = '';
+
+        visitTypeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove selected class from all buttons
+                visitTypeButtons.forEach(btn => btn.classList.remove('selected'));
+                
+                // Add selected class to clicked button
+                this.classList.add('selected');
+                
+                // Store the selected visit type
+                selectedVisitType = this.getAttribute('data-type');
+            });
+        });
+        
+        function pasteFromClipboard() {
+            // Reset edited state
+            resetEditedState();
+            
+            navigator.clipboard.readText()
+                .then(text => {
+                    document.getElementById('inputText').value = text;
+                    splitText();
+                })
+                .catch(err => {
+                    console.error('Failed to read clipboard contents: ', err);
+                    alert('Please grant clipboard permission or paste manually.');
+                });
+        }
+        
+        function updateMainTextarea() {
+            const paragraphDivs = document.querySelectorAll('.paragraph-box');
+            let combinedText = '';
+            
+            paragraphDivs.forEach((div, index) => {
+                // Get label if it exists
+                const labelElement = div.querySelector('.paragraph-label');
+                const label = labelElement ? labelElement.textContent : '';
+                
+                // Get content
+                const content = div.querySelector('.paragraph-content').textContent;
+                
+                // Combine them back together
+                let paraText = '';
+                if (label) {
+                    paraText = label + ' ' + content;
+                } else {
+                    paraText = content;
+                }
+                
+                combinedText += paraText;
+                if (index < paragraphDivs.length - 1) {
+                    combinedText += '\n\n';
+                }
+            });
+            
+            document.getElementById('inputText').value = combinedText;
+            
+            // Update number boxes after a short delay
+            setTimeout(addNumberBoxesToParagraphs, 100);
+        }
+        
+        // Function to extract numbers from text
+        function extractNumbers(text) {
+            // Match positive and negative numbers (integers and decimals)
+            const numberRegex = /-?\d+(\.\d+)?/g;
+            return text.match(numberRegex) || [];
+        }
+
+        // Function to add number boxes to all paragraphs
+        function addNumberBoxesToParagraphs() {
+            const paragraphDivs = document.querySelectorAll('.paragraph-box');
+            
+            paragraphDivs.forEach((div, paraIndex) => {
+                const content = div.querySelector('.paragraph-content');
+                const text = content.textContent;
+                const numbers = extractNumbers(text);
+                
+                // Remove any existing number boxes
+                const existingNumbersContainer = div.querySelector('.numbers-container');
+                if (existingNumbersContainer) {
+                    existingNumbersContainer.remove();
+                }
+                
+                if (numbers.length > 0) {
+                    // Create container for number boxes
+                    const numbersContainer = document.createElement('div');
+                    numbersContainer.className = 'numbers-container';
+                    
+                    // Add each number box
+                    numbers.forEach((number, numberIndex) => {
+                        const numberBoxContainer = document.createElement('div');
+                        numberBoxContainer.className = 'number-box-container';
+                        
+                        // Add label for the number
+                        const numberLabel = document.createElement('div');
+                        numberLabel.className = 'number-label';
+                        numberLabel.textContent = `Number ${numberIndex + 1}:`;
+                        
+                        // Create number input box
+                        const numberBox = document.createElement('input');
+                        numberBox.type = 'text';
+                        numberBox.className = 'number-box';
+                        numberBox.value = number;
+                        
+                        // Create arrows container
+                        const arrowsContainer = document.createElement('div');
+                        arrowsContainer.className = 'number-arrows';
+                        
+                        // Create up arrow
+                        const upArrow = document.createElement('button');
+                        upArrow.className = 'arrow-btn';
+                        upArrow.innerHTML = '&#9650;'; // Up arrow symbol
+                        upArrow.onclick = function() {
+                            // Increment the number by 1
+                            const currentValue = parseFloat(numberBox.value);
+                            const newValue = (currentValue + 1).toString();
+                            numberBox.value = newValue;
+                            
+                            // Mark this button as pressed
+                            upArrow.classList.add('pressed');
+                            
+                            // Mark the number box as edited
+                            numberBox.classList.add('edited');
+                            
+                            // Update the text content
+                            updateNumberInText(content, numberIndex, number, newValue);
+                        };
+                        
+                        // Create down arrow
+                        const downArrow = document.createElement('button');
+                        downArrow.className = 'arrow-btn';
+                        downArrow.innerHTML = '&#9660;'; // Down arrow symbol
+                        downArrow.onclick = function() {
+                            // Decrement the number by 1
+                            const currentValue = parseFloat(numberBox.value);
+                            const newValue = (currentValue - 1).toString();
+                            numberBox.value = newValue;
+                            
+                            // Mark this button as pressed
+                            downArrow.classList.add('pressed');
+                            
+                            // Mark the number box as edited
+                            numberBox.classList.add('edited');
+                            
+                            // Update the text content
+                            updateNumberInText(content, numberIndex, number, newValue);
+                        };
+                        
+                        // Add event listener for manual editing
+                        numberBox.oninput = function() {
+                            // Mark the number box as edited
+                            this.classList.add('edited');
+                            
+                            // Update the text content
+                            updateNumberInText(content, numberIndex, number, this.value);
+                        };
+                        
+                        // Add arrows to container
+                        arrowsContainer.appendChild(upArrow);
+                        arrowsContainer.appendChild(downArrow);
+                        
+                        // Add elements to number box container
+                        numberBoxContainer.appendChild(numberLabel);
+                        numberBoxContainer.appendChild(numberBox);
+                        numberBoxContainer.appendChild(arrowsContainer);
+                        
+                        // Add number box container to numbers container
+                        numbersContainer.appendChild(numberBoxContainer);
+                    });
+                    
+                    // Add numbers container to paragraph box
+                    div.appendChild(numbersContainer);
+                }
+            });
+        }
+
+        // Function to update a specific number in the text
+        function updateNumberInText(contentElement, numberIndex, oldValue, newValue) {
+            let text = contentElement.textContent;
+            let count = 0;
+            
+            // Replace the specific occurrence of the number
+            text = text.replace(/-?\d+(\.\d+)?/g, function(match) {
+                if (count === numberIndex) {
+                    count++;
+                    return newValue;
+                }
+                count++;
+                return match;
+            });
+            
+            // Update the content
+            contentElement.textContent = text;
+            
+            // Update the main textarea
+            updateMainTextarea();
+        }
+
+        function splitText() {
+            // Reset edited state
+            resetEditedState();
+            
+            const text = document.getElementById('inputText').value;
+            const paragraphs = text.split(/\n\s*\n/); // Split on empty lines
+            const container = document.getElementById('paragraphContainer');
+            
+            container.innerHTML = '';
+            
+            // Try to detect patient name
+            detectPatientName(paragraphs);
+            
+            // Try to detect visit type
+            detectVisitType(text);
+            
+            // Process paragraphs
+            let i = 0;
+            while (i < paragraphs.length) {
+                const para = paragraphs[i].trim();
+                if (para === '') {
+                    i++;
+                    continue;
+                }
+                
+                // Check if this is a numbered section (like "7. PATIENT 01 NOTES")
+                const numberedSectionMatch = para.match(/^(\d+\.?\s+.*?)$/);
+                
+                // Check if the next paragraph is a medical label (like "PORTS/TUBES:")
+                if (numberedSectionMatch && i + 1 < paragraphs.length && 
+                    paragraphs[i + 1].trim().match(/^(PORTS\/TUBES|NOTES|MANAGEMENT):/i)) {
+                    
+                    // Get the next paragraph (medical label)
+                    const nextPara = paragraphs[i + 1].trim();
+                    
+                    // Check if there's content after the colon in the medical label
+                    const medicalLabelMatch = nextPara.match(/^(.*?):(.*)$/s);
+                    
+                    // Create paragraph box
+                    const box = document.createElement('div');
+                    box.className = 'paragraph-box';
+                    box.id = `para-${i}`;
+                    
+                    // Combine the numbered section and medical label as one label
+                    const labelElement = document.createElement('div');
+                    labelElement.className = 'paragraph-label';
+                    labelElement.textContent = para + ' ' + medicalLabelMatch[1] + ':';
+                    box.appendChild(labelElement);
+                    
+                    // Add the content after the colon from the medical label
+                    const content = document.createElement('div');
+                    content.className = 'paragraph-content';
+                    content.contentEditable = true;
+                    content.textContent = medicalLabelMatch[2].trim();
+                    content.addEventListener('input', function() {
+                        updateMainTextarea();
+                        // Number boxes will be updated by updateMainTextarea
+                    });
+                    
+                    // Add copy button
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = i % 2 === 0 ? 'copy-btn copy-btn-orange' : 'copy-btn copy-btn-yellow';
+                    copyBtn.textContent = 'COPY THIS PARAGRAPH';
+                    copyBtn.onclick = () => copyParagraph(i);
+                    
+                    box.appendChild(content);
+                    box.appendChild(copyBtn);
+                    container.appendChild(box);
+                    
+                    // Skip both paragraphs since we've used them
+                    i += 2;
+                }
+                // Check for complex numbered sections with a colon
+                else if (para.match(/^(\d+\.?\s+.*?):\s*(.*?)$/s)) {
+                    const numberedWithColonMatch = para.match(/^(\d+\.?\s+.*?):\s*(.*?)$/s);
+                    
+                    // Create paragraph box
+                    const box = document.createElement('div');
+                    box.className = 'paragraph-box';
+                    box.id = `para-${i}`;
+                    
+                    // Add the numbered section with colon as a label
+                    const labelElement = document.createElement('div');
+                    labelElement.className = 'paragraph-label';
+                    labelElement.textContent = numberedWithColonMatch[1].trim() + ':';
+                    box.appendChild(labelElement);
+                    
+                    // Add the content after the colon
+                    const content = document.createElement('div');
+                    content.className = 'paragraph-content';
+                    content.contentEditable = true;
+                    content.textContent = numberedWithColonMatch[2].trim();
+                    content.addEventListener('input', function() {
+                        updateMainTextarea();
+                        // Number boxes will be updated by updateMainTextarea
+                    });
+                    
+                    // Add copy button
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = i % 2 === 0 ? 'copy-btn copy-btn-orange' : 'copy-btn copy-btn-yellow';
+                    copyBtn.textContent = 'COPY THIS PARAGRAPH';
+                    copyBtn.onclick = () => copyParagraph(i);
+                    
+                    box.appendChild(content);
+                    box.appendChild(copyBtn);
+                    container.appendChild(box);
+                    
+                    i++;
+                }
+                // Check if this paragraph is a numbered line
+                else if (para.match(/^\d+\.?\s+.*$/) && i + 1 < paragraphs.length) {
+                    const numberMatch = para.match(/^\d+\.?\s+.*$/);
+                    
+                    // Create paragraph box for the NEXT paragraph
+                    const box = document.createElement('div');
+                    box.className = 'paragraph-box';
+                    box.id = `para-${i}`;
+                    
+                    // Add the numbered line as a label
+                    const labelElement = document.createElement('div');
+                    labelElement.className = 'paragraph-label';
+                    labelElement.textContent = para;
+                    box.appendChild(labelElement);
+                    
+                    // Add the next paragraph as content
+                    const content = document.createElement('div');
+                    content.className = 'paragraph-content';
+                    content.contentEditable = true;
+                    content.textContent = paragraphs[i + 1].trim();
+                    content.addEventListener('input', function() {
+                        updateMainTextarea();
+                        // Number boxes will be updated by updateMainTextarea
+                    });
+                    
+                    // Add copy button
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = i % 2 === 0 ? 'copy-btn copy-btn-orange' : 'copy-btn copy-btn-yellow';
+                    copyBtn.textContent = 'COPY THIS PARAGRAPH';
+                    copyBtn.onclick = () => copyParagraph(i);
+                    
+                    box.appendChild(content);
+                    box.appendChild(copyBtn);
+                    container.appendChild(box);
+                    
+                    // Skip the next paragraph since we've used it
+                    i += 2;
+                } else {
+                    // Handle normal paragraphs or special labels
+                    const box = document.createElement('div');
+                    box.className = 'paragraph-box';
+                    box.id = `para-${i}`;
+                    
+                    let label = null;
+                    let contentText = para;
+                    
+                    // Check for various label patterns
+                    
+                    // 1. Check for standard colon labels
+                    let colonMatch = contentText.match(/^([^:\n]*?[^:\n\s]):(.*)$/s);
+                    
+                    // 2. Check for medical terminology patterns (like PT LTG:)
+                    if (!colonMatch) {
+                        colonMatch = contentText.match(/^(.*?(?:PT|LTG|STG|MANAGEMENT|PORTS\/TUBES|NOTES)(?:\s*[-:]\s*[^:\n]*?)?):(.*)$/is);
+                    }
+                    
+                    // 3. Check for all-caps headers with hyphens
+                    if (!colonMatch) {
+                        colonMatch = contentText.match(/^([A-Z][A-Z\s\d\(\)\/\-]+(?:\s*[-:]\s*[^:\n]*?)?):(.*)$/s);
+                    }
+                    
+                    if (colonMatch) {
+                        const labelPart = colonMatch[1].trim() + ':';
+                        const contentPart = colonMatch[2].trim();
+                        
+                        // More permissive label detection for medical terminology
+                        if (labelPart.includes('PT') || labelPart.includes('LTG') || 
+                            labelPart.includes('MANAGEMENT') || labelPart.includes('PORTS/TUBES') ||
+                            labelPart.toUpperCase() === labelPart ||
+                            (contentPart.length > 0 && !labelPart.includes("\n"))) {
+                            label = labelPart;
+                            contentText = contentPart;
+                        }
+                    }
+                    
+                    // Add label if found
+                    if (label) {
+                        const labelElement = document.createElement('div');
+                        labelElement.className = 'paragraph-label';
+                        labelElement.textContent = label;
+                        box.appendChild(labelElement);
+                    }
+                    
+                    // Add content
+                    const content = document.createElement('div');
+                    content.className = 'paragraph-content';
+                    content.contentEditable = true;
+                    content.textContent = contentText;
+                    content.addEventListener('input', function() {
+                        updateMainTextarea();
+                        // Number boxes will be updated by updateMainTextarea
+                    });
+                    
+                    // Add copy button
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = i % 2 === 0 ? 'copy-btn copy-btn-orange' : 'copy-btn copy-btn-yellow';
+                    copyBtn.textContent = 'COPY THIS PARAGRAPH';
+                    copyBtn.onclick = () => copyParagraph(i);
+                    
+                    box.appendChild(content);
+                    box.appendChild(copyBtn);
+                    container.appendChild(box);
+                    
+                    i++;
+                }
+            }
+
+            // Add number boxes to all paragraphs
+            setTimeout(addNumberBoxesToParagraphs, 100); // Small delay to ensure DOM is updated
+        }
+        
+        function copyParagraph(index) {
+            const paraBox = document.getElementById(`para-${index}`);
+            
+            // Get label if it exists
+            const labelElement = paraBox.querySelector('.paragraph-label');
+            const label = labelElement ? labelElement.textContent + ' ' : '';
+            
+            // Get content
+            const content = paraBox.querySelector('.paragraph-content').textContent;
+            
+            // Combine them for copying
+            const textToCopy = label + content;
+            
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    const btn = paraBox.querySelector('.copy-btn');
+                    const originalText = btn.textContent;
+                    btn.textContent = 'COPIED!';
+                    setTimeout(() => { btn.textContent = originalText; }, 1500);
+                })
+                .catch(err => console.error('Failed to copy: ', err));
+        }
+        
+        function saveTextFile() {
+            const text = document.getElementById('inputText').value;
+            const patientName = document.getElementById('patientName').value || 'Patient';
+            const visitDate = document.getElementById('visitDate').value || new Date().toISOString().split('T')[0];
+            
+            // Include visit type in filename if selected
+            const visitTypePart = selectedVisitType ? `_${selectedVisitType}` : '';
+            const filename = `${patientName}${visitTypePart}_${visitDate}.txt`;
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            
+            URL.revokeObjectURL(link.href);
+        }
+
+        function detectPatientName(paragraphs) {
+            // Focus on the first few paragraphs (where patient info typically appears)
+            const initialParagraphs = paragraphs.slice(0, Math.min(5, paragraphs.length));
+            const fullText = initialParagraphs.join('\n\n');
+            
+            // Primary patterns - these are highly reliable indicators of patient name
+            const primaryPatterns = [
+                /(?:^|\n)(?:patient|pt)(?:\s+name)?:\s*([A-Z][A-Z\s]+(?:\s+[A-Z]\.?\s+)?[A-Z]+)/i,
+                /(?:^|\n)name:\s*([A-Z][A-Z\s]+(?:\s+[A-Z]\.?\s+)?[A-Z]+)/i,
+                /(?:^|\n)(?:RE|regarding):\s*([A-Z][A-Z\s]+(?:\s+[A-Z]\.?\s+)?[A-Z]+)/i,
+                /(?:^|\n)([A-Z][A-Z\s]+(?:\s+[A-Z]\.?\s+)?[A-Z]+)(?:\s+DOB|\s+MRN|\s+\d{1,2}\/\d{1,2}\/\d{2,4})/i
+            ];
+            
+            // Check primary patterns in the first few paragraphs
+            for (const pattern of primaryPatterns) {
+                const match = fullText.match(pattern);
+                if (match && match[1]) {
+                    const potentialName = match[1].trim();
+                    
+                    // Validate the name
+                    const nameParts = potentialName.split(/\s+/);
+                    if (nameParts.length >= 2 && 
+                        nameParts.every(part => part[0] === part[0].toUpperCase())) {
+                        
+                        // Set the patient name in the input field
+                        document.getElementById('patientName').value = potentialName;
+                        return; // Stop after finding a primary match
+                    }
+                }
+            }
+            
+            // Look for ALL CAPS names or names with middle initials in all paragraphs
+            // Special case for "GAY F METZ" format (all caps with middle initial)
+            const specialCasePattern = /\b([A-Z]{2,}\s+[A-Z]\s+[A-Z]{2,})\b/;
+            
+            // First check the initial paragraphs
+            const specialMatch = fullText.match(specialCasePattern);
+            if (specialMatch && specialMatch[1]) {
+                document.getElementById('patientName').value = specialMatch[1].trim();
+                return;
+            }
+            
+            // If not found in initial paragraphs, check all paragraphs
+            for (const para of paragraphs) {
+                const match = para.match(specialCasePattern);
+                if (match && match[1]) {
+                    document.getElementById('patientName').value = match[1].trim();
+                    return;
+                }
+            }
+            
+            // Pattern for ALL CAPS names or names with middle initials
+            const allCapsPattern = /\b([A-Z][A-Z]+(?:\s+[A-Z](?:\.|\s+))?(?:\s+[A-Z][A-Z]+))\b/;
+            
+            // Check initial paragraphs first
+            const nameMatch = fullText.match(allCapsPattern);
+            if (nameMatch && nameMatch[1]) {
+                const potentialName = nameMatch[1].trim();
+                
+                // Validate the name
+                const nameParts = potentialName.split(/\s+/);
+                if (nameParts.length >= 2 && 
+                    !potentialName.includes("PT") && // Avoid PT abbreviations
+                    !potentialName.includes("DR") && // Avoid doctor abbreviations
+                    !potentialName.match(/\b(INC|LLC|CORP|HOSPITAL|CENTER|CLINIC)\b/)) { // Avoid facility names
+                    
+                    // Set the patient name in the input field
+                    document.getElementById('patientName').value = potentialName;
+                    return;
+                }
+            }
+            
+            // If not found in initial paragraphs, check all paragraphs
+            for (const para of paragraphs) {
+                const match = para.match(allCapsPattern);
+                if (match && match[1]) {
+                    const potentialName = match[1].trim();
+                    
+                    // Validate the name
+                    const nameParts = potentialName.split(/\s+/);
+                    if (nameParts.length >= 2 && 
+                        !potentialName.includes("PT") && // Avoid PT abbreviations
+                        !potentialName.includes("DR") && // Avoid doctor abbreviations
+                        !potentialName.match(/\b(INC|LLC|CORP|HOSPITAL|CENTER|CLINIC)\b/)) { // Avoid facility names
+                        
+                        // Set the patient name in the input field
+                        document.getElementById('patientName').value = potentialName;
+                        return;
+                    }
+                }
+            }
+            
+            // If we still haven't found a name, try secondary patterns in all paragraphs
+            const secondaryPatterns = [
+                /(?:Mr\.|Mrs\.|Ms\.|Miss)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z](?:\.|\s+))?(?:\s+[A-Z][a-zA-Z]+))/i,
+                /\b([A-Z][a-zA-Z]+(?:\s+[A-Z](?:\.|\s+))?(?:\s+[A-Z][a-zA-Z]+))\s+(?:is|was|has been|presented|reports)/i,
+                /\b([A-Z][a-zA-Z]+(?:\s+[A-Z](?:\.|\s+))?(?:\s+[A-Z][a-zA-Z]+)),?\s+(?:a|an)\s+(\d+)(?:-|\s+)(?:year|y\/o|yo)/i
+            ];
+            
+            // First check initial paragraphs
+            for (const pattern of secondaryPatterns) {
+                const match = fullText.match(pattern);
+                if (match && match[1]) {
+                    const potentialName = match[1].trim();
+                    
+                    // Validate the name
+                    const nameParts = potentialName.split(/\s+/);
+                    if (nameParts.length >= 2 && 
+                        nameParts.every(part => part[0] === part[0].toUpperCase()) &&
+                        !potentialName.includes("PT") && // Avoid PT abbreviations
+                        !potentialName.match(/\b(Inc|LLC|Corp|Hospital|Center|Clinic)\b/i)) { // Avoid facility names
+                        
+                        // Set the patient name in the input field
+                        document.getElementById('patientName').value = potentialName;
+                        return;
+                    }
+                }
+            }
+            
+            // Then check all paragraphs
+            for (const para of paragraphs) {
+                for (const pattern of secondaryPatterns) {
+                    const match = para.match(pattern);
+                    if (match && match[1]) {
+                        const potentialName = match[1].trim();
+                        
+                        // Validate the name
+                        const nameParts = potentialName.split(/\s+/);
+                        if (nameParts.length >= 2 && 
+                            nameParts.every(part => part[0] === part[0].toUpperCase()) &&
+                            !potentialName.includes("PT") && // Avoid PT abbreviations
+                            !potentialName.match(/\b(Inc|LLC|Corp|Hospital|Center|Clinic)\b/i)) { // Avoid facility names
+                            
+                            // Set the patient name in the input field
+                            document.getElementById('patientName').value = potentialName;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        function detectVisitType(text) {
+            // Get all possible visit types from the buttons
+            const visitTypeButtons = document.querySelectorAll('.visit-type-btn');
+            const visitTypes = Array.from(visitTypeButtons).map(btn => btn.getAttribute('data-type'));
+            
+            // Create a regex pattern to match any of the visit types
+            // This will look for patterns like "PT00", "PT01", etc.
+            const visitTypePattern = new RegExp('\\b(' + visitTypes.join('|') + ')\\b', 'i');
+            
+            const match = text.match(visitTypePattern);
+            if (match && match[1]) {
+                const detectedType = match[1].toUpperCase();
+                
+                // Find the button with the matching data-type and select it
+                visitTypeButtons.forEach(btn => {
+                    if (btn.getAttribute('data-type').toUpperCase() === detectedType) {
+                        // Remove selected class from all buttons
+                        visitTypeButtons.forEach(b => b.classList.remove('selected'));
+                        
+                        // Add selected class to the matching button
+                        btn.classList.add('selected');
+                        
+                        // Store the selected visit type
+                        selectedVisitType = detectedType;
+                    }
+                });
+            }
+        }
+
+        // Add event listener to content elements
+        function addContentEventListeners() {
+            document.addEventListener('input', function(event) {
+                if (event.target.classList.contains('paragraph-content')) {
+                    updateMainTextarea();
+                }
+            });
+        }
+
+        // Call addContentEventListeners when the page loads
+        window.addEventListener('load', function() {
+            addContentEventListeners();
+        });
+
+        // Initialize number boxes when the page loads
+        window.addEventListener('load', function() {
+            // Add event listeners to content elements
+            addContentEventListeners();
+            
+            // Process any existing text
+            const inputText = document.getElementById('inputText').value;
+            if (inputText.trim()) {
+                splitText();
+            }
+        });
+
+        // Add this function for testing
+        function testNumberExtraction() {
+            const testText = "Patient has a temperature of 98.6 and heart rate of -5.";
+            const numbers = extractNumbers(testText);
+            console.log("Extracted numbers:", numbers);
+            
+            // Test the number box creation
+            const container = document.getElementById('paragraphContainer');
+            const testBox = document.createElement('div');
+            testBox.className = 'paragraph-box';
+            testBox.id = 'test-para';
+            
+            const testContent = document.createElement('div');
+            testContent.className = 'paragraph-content';
+            testContent.contentEditable = true;
+            testContent.textContent = testText;
+            
+            testBox.appendChild(testContent);
+            container.appendChild(testBox);
+            
+            // Add number boxes
+            addNumberBoxesToParagraphs();
+            
+            console.log("Test complete");
+        }
+
+        // Call the test function when a button is clicked
+        function addTestButton() {
+            const testBtn = document.createElement('button');
+            testBtn.textContent = "Test Number Extraction";
+            testBtn.style.marginTop = "20px";
+            testBtn.style.padding = "10px";
+            testBtn.style.backgroundColor = "#4285f4";
+            testBtn.style.color = "white";
+            testBtn.style.border = "none";
+            testBtn.style.borderRadius = "8px";
+            testBtn.style.cursor = "pointer";
+            testBtn.onclick = testNumberExtraction;
+            
+            document.body.appendChild(testBtn);
+        }
+
+        // Add the test button when the page loads
+        window.addEventListener('load', function() {
+            // Uncomment this line to add a test button
+            // addTestButton();
+        });
+
+        // Add this function to reset the edited state
+        function resetEditedState() {
+            // Remove 'pressed' class from all arrow buttons
+            document.querySelectorAll('.arrow-btn.pressed').forEach(button => {
+                button.classList.remove('pressed');
+            });
+            
+            // Remove 'edited' class from all number boxes
+            document.querySelectorAll('.number-box.edited').forEach(box => {
+                box.classList.remove('edited');
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
